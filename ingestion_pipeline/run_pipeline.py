@@ -8,7 +8,7 @@ def run_pipeline():
 
     
     print("Wikipedia RAG Data Pipeline")
-    print("=" * 60)
+    print()
 
     print("\nSTEP 1: Download Wikipedia dataset and convert it to TXT")
     download_parquet()
@@ -27,7 +27,7 @@ def run_pipeline():
     index_list()
 
     print()
-    print("Pipeline completed.")
+    print("Ingestion Pipeline completed.")
 
 if __name__ == "__run_pipeline__":
     run_pipeline()

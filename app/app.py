@@ -4,9 +4,7 @@ import sys
 import streamlit as st
 
 
-# --------------------------------------------------
 # Project paths
-# --------------------------------------------------
 
 BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.abspath(__file__))
@@ -19,18 +17,14 @@ if BASE_DIR not in sys.path:
     )
 
 
-# --------------------------------------------------
 # Import query pipeline
-# --------------------------------------------------
 
 from query_pipeline.s01_search import search
 from query_pipeline.s02_reranker import rerank
 from query_pipeline.s03_generate_answer import generate_answer
 
 
-# --------------------------------------------------
 # Page configuration
-# --------------------------------------------------
 
 st.set_page_config(
     page_title="SharePoint RAG",
@@ -39,9 +33,7 @@ st.set_page_config(
 )
 
 
-# --------------------------------------------------
 # Helper: initialize session
-# --------------------------------------------------
 
 def initialize_session():
 
@@ -49,9 +41,7 @@ def initialize_session():
         st.session_state.messages = []
 
 
-# --------------------------------------------------
 # Helper: display sources
-# --------------------------------------------------
 
 def display_sources(results):
 
@@ -119,15 +109,11 @@ def display_sources(results):
                 st.divider()
 
 
-# --------------------------------------------------
 # Helper: process question
-# --------------------------------------------------
 
 def ask(question):
 
-    # --------------------------------------------------
     # 1. Vector search
-    # --------------------------------------------------
 
     with st.status(
         "Searching SharePoint...",
@@ -149,14 +135,11 @@ def ask(question):
     if not search_results:
 
         return (
-            "I couldn't find relevant information "
-            "in the indexed SharePoint content.",
+            "I couldn't find relevant information in the indexed SharePoint content.",
             []
         )
 
-    # --------------------------------------------------
     # 2. Reranking
-    # --------------------------------------------------
 
     with st.status(
         "Reranking results...",
@@ -184,9 +167,7 @@ def ask(question):
             []
         )
 
-    # --------------------------------------------------
     # 3. Generate answer
-    # --------------------------------------------------
 
     with st.status(
         "Generating answer...",
@@ -209,16 +190,12 @@ def ask(question):
     )
 
 
-# --------------------------------------------------
 # Initialize
-# --------------------------------------------------
 
 initialize_session()
 
 
-# --------------------------------------------------
 # Header
-# --------------------------------------------------
 
 st.title("SharePoint RAG")
 
@@ -228,9 +205,7 @@ st.caption(
 )
 
 
-# --------------------------------------------------
 # Sidebar
-# --------------------------------------------------
 
 with st.sidebar:
 
@@ -240,8 +215,6 @@ with st.sidebar:
 
     st.write(
         "Searches indexed SharePoint content "
-        "using vector search, reranking, "
-        "and an LLM."
     )
 
     st.divider()
@@ -256,9 +229,7 @@ with st.sidebar:
         st.rerun()
 
 
-# --------------------------------------------------
 # Existing conversation
-# --------------------------------------------------
 
 for message in st.session_state.messages:
 
@@ -280,24 +251,18 @@ for message in st.session_state.messages:
             )
 
 
-# --------------------------------------------------
 # Chat input
-# --------------------------------------------------
 
 question = st.chat_input(
     "Ask a question about SharePoint..."
 )
 
 
-# --------------------------------------------------
 # Process new question
-# --------------------------------------------------
 
 if question:
 
-    # --------------------------------------------------
     # Store/display user question
-    # --------------------------------------------------
 
     st.session_state.messages.append({
         "role": "user",
@@ -312,9 +277,7 @@ if question:
             question
         )
 
-    # --------------------------------------------------
     # Run RAG pipeline
-    # --------------------------------------------------
 
     with st.chat_message(
         "assistant"
@@ -334,9 +297,7 @@ if question:
                 sources
             )
 
-            # --------------------------------------------------
             # Save answer in conversation
-            # --------------------------------------------------
 
             st.session_state.messages.append({
                 "role": "assistant",
@@ -347,8 +308,7 @@ if question:
         except Exception as error:
 
             error_message = (
-                "An error occurred while processing "
-                "your question."
+                "An error occurred while processing your question."
             )
 
             st.error(
