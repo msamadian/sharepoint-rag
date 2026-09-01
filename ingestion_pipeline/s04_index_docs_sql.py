@@ -27,13 +27,15 @@ SHAREPOINT_FOLDER = "/Docs"
 
 SQL_SERVER = os.getenv("SQL_SERVER")
 SQL_DATABASE = os.getenv("SQL_DATABASE")
+SQL_USERNAME = os.getenv("SQL_USERNAME")
+SQL_PASSWORD = os.getenv("SQL_PASSWORD")
 
-# Windows Authentication
 SQL_CONNECTION_STRING = (
     "DRIVER={ODBC Driver 18 for SQL Server};"
     f"SERVER={SQL_SERVER};"
     f"DATABASE={SQL_DATABASE};"
-    "Trusted_Connection=yes;"
+    f"UID={SQL_USERNAME};"
+    f"PWD={SQL_PASSWORD};"
     "TrustServerCertificate=yes;"
 )
 

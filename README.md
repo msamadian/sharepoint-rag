@@ -51,8 +51,8 @@ The project is designed primarily for **on-premises SharePoint environments usin
 - Reads SharePoint list items through the REST API
 - Supports generic SharePoint list indexing without hard-coded list columns
 - Uses SharePoint display names when representing list fields
-- Generates semantic embeddings using `BAAI/bge-small-en-v1.5`
-- Stores 384-dimensional embeddings using SQL Server `VECTOR`
+- Generates semantic embeddings
+- Stores dimensional embeddings using SQL Server `VECTOR`
 - Searches both document chunks and SharePoint list items
 - Uses cosine vector distance for initial retrieval
 - Reranks retrieved candidates before answer generation
@@ -62,7 +62,68 @@ The project is designed primarily for **on-premises SharePoint environments usin
 
 
 
-## RAG Pipeline
+## Igestion Pipeline
+
+The indexing scripts are numbered according to their intended execution order.
+
+### `s01_download_files.py`
+
+Downloads source/test documents used for populating the SharePoint environment.
+
+### `s02_populate_sp_library.py`
+
+Uploads documents to a SharePoint document library using NTLM authentication and the SharePoint REST API.
+
+### `s03_populate_sp_list.py`
+
+Populates a SharePoint list with test records.
+
+### `s04_index_docs_sql.py`
+
+Reads documents from the SharePoint library, splits their content into chunks, generates embeddings, and stores the chunks in SQL Server.
+
+Conceptually:
+
+```text
+SharePoint Document
+        |
+        v
+    Extract Text
+        |
+        v
+ Sentence Chunking
+        |
+        v
+ BGE Embeddings
+        |
+        v
+dbo.DocumentChunks
+```
+
+
+
+### `s05_index_lists_sql.py`
+
+Reads items from a SharePoint list and creates one semantic representation per item.
+
+List schemas are discovered dynamically. SharePoint internal field names are mapped to their display names before content is embedded.
+
+For example:
+
+```text
+First Name: Jonas
+E-mail Address: jonas@example.test
+Company: Northstar Technologies
+Job Title: IT Manager
+City: Berlin
+Country/Region: Germany
+```
+
+is converted into one embedding and stored in `dbo.ListItems`.
+
+This allows the indexer to work with different SharePoint list schemas without requiring every business field to have its own SQL column.
+
+## Query Pipeline
 
 The query pipeline consists of three stages:
 
@@ -135,11 +196,11 @@ SharepointRAG/
 |   +-- app.py
 |
 +-- pipeline/
-|   +-- 01_download_files.py
-|   +-- 02_populate_sp_library.py
-|   +-- 03_populate_sp_list.py
-|   +-- 04_index_docs_sql.py
-|   +-- 05_index_lists_sql.py
+|   +-- s01_download_files.py
+|   +-- s02_populate_sp_library.py
+|   +-- s03_populate_sp_list.py
+|   +-- s04_index_docs_sql.py
+|   +-- s05_index_lists_sql.py
 |
 +-- query_pipeline/
 |   +-- s01_search.py
@@ -156,67 +217,6 @@ SharepointRAG/
 ```
 
 
-
-## Indexing Pipeline
-
-The indexing scripts are numbered according to their intended execution order.
-
-### `01_download_files.py`
-
-Downloads source/test documents used for populating the SharePoint environment.
-
-### `02_populate_sp_library.py`
-
-Uploads documents to a SharePoint document library using NTLM authentication and the SharePoint REST API.
-
-### `03_populate_sp_list.py`
-
-Populates a SharePoint list with test records.
-
-### `04_index_docs_sql.py`
-
-Reads documents from the SharePoint library, splits their content into chunks, generates embeddings, and stores the chunks in SQL Server.
-
-Conceptually:
-
-```text
-SharePoint Document
-        |
-        v
-    Extract Text
-        |
-        v
- Sentence Chunking
-        |
-        v
- BGE Embeddings
-        |
-        v
-dbo.DocumentChunks
-```
-
-
-
-### `05_index_lists_sql.py`
-
-Reads items from a SharePoint list and creates one semantic representation per item.
-
-List schemas are discovered dynamically. SharePoint internal field names are mapped to their display names before content is embedded.
-
-For example:
-
-```text
-First Name: Jonas
-E-mail Address: jonas@example.test
-Company: Northstar Technologies
-Job Title: IT Manager
-City: Berlin
-Country/Region: Germany
-```
-
-is converted into one embedding and stored in `dbo.ListItems`.
-
-This allows the indexer to work with different SharePoint list schemas without requiring every business field to have its own SQL column.
 
 ## SQL Server
 
@@ -274,18 +274,6 @@ ON dbo.ListItems(ListName, ItemId);
 
 ## Embedding Model
 
-The current embedding model is:
-
-```text
-BAAI/bge-small-en-v1.5
-```
-
-Embedding dimensions:
-
-```text
-384
-```
-
 Embeddings are normalized before being stored.
 
 The same model must be used for both:
@@ -312,6 +300,8 @@ SHAREPOINT_PASSWORD=your-password
 
 SQL_SERVER=your-sql-server
 SQL_DATABASE=your-database
+SQL_USERNAME=sql_account
+SQL_PASSWORD=your-password
 
 # Embeddings
 
@@ -381,11 +371,11 @@ ODBC Driver 18 for SQL Server
 Run the indexing scripts from the project root in sequence:
 
 ```bash
-python pipeline/01_download_files.py
-python pipeline/02_populate_sp_library.py
-python pipeline/03_populate_sp_list.py
-python pipeline/04_index_docs_sql.py
-python pipeline/05_index_lists_sql.py
+python pipeline/s01_download_files.py
+python pipeline/s02_populate_sp_library.py
+python pipeline/s03_populate_sp_list.py
+python pipeline/s04_index_docs_sql.py
+python pipeline/s05_index_lists_sql.py
 ```
 
 The first three scripts are primarily useful for creating/populating a test environment. Existing SharePoint environments can skip those steps as appropriate.
@@ -539,30 +529,6 @@ Current limitations include:
 - list indexing currently targets one configured SharePoint list per run
 - SharePoint permissions are not yet propagated to individual vector records
 - indexing currently performs straightforward reindexing rather than a complete incremental synchronization strategy
-
-
-
-## Potential Improvements
-
-Possible future enhancements include:
-
-- DOCX extraction
-- PDF extraction
-- PowerPoint and Excel extraction
-- incremental SharePoint synchronization
-- indexing multiple SharePoint lists
-- deletion detection
-- SharePoint permission/ACL-aware retrieval
-- metadata filtering
-- hybrid keyword + vector search
-- improved citation rendering
-- configurable retrieval strategies
-- conversation history
-- streaming LLM responses
-- Teams integration
-- centralized pipeline orchestration
-- scheduled reindexing
-- evaluation datasets and RAG quality metrics
 
 
 

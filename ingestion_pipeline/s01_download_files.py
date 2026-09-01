@@ -103,7 +103,7 @@ def convert_to_text():
 
                 print(
                     f"\nFinished. Created "
-                    f"{article_number} text files."
+                    f"{MAX_ARTICLES} text files."
                 )
 
                 return
