@@ -27,7 +27,7 @@ from query_pipeline.s03_generate_answer import generate_answer
 # Page configuration
 
 st.set_page_config(
-    page_title="SharePoint RAG",
+    page_title="SharePoint AI Assistant",
     page_icon="🔎",
     layout="wide"
 )
@@ -162,8 +162,7 @@ def ask(question):
     if not reranked_results:
 
         return (
-            "I couldn't find sufficiently relevant "
-            "SharePoint content for this question.",
+            "I couldn't find sufficiently relevant SharePoint content for this question.",
             []
         )
 
@@ -197,24 +196,18 @@ initialize_session()
 
 # Header
 
-st.title("SharePoint RAG")
+st.title("SharePoint AI Assistant")
 
 st.caption(
-    "Ask questions about your indexed "
-    "SharePoint documents and list items."
+    "Ask questions across SharePoint libraries and lists"
 )
 
 
 # Sidebar
 
 with st.sidebar:
-
-    st.header(
-        "SharePoint RAG"
-    )
-
-    st.write(
-        "Searches indexed SharePoint content "
+    st.image(
+        "app/assets/MoApp.png"
     )
 
     st.divider()
@@ -254,7 +247,7 @@ for message in st.session_state.messages:
 # Chat input
 
 question = st.chat_input(
-    "Ask a question about SharePoint..."
+    "Ask a question..."
 )
 
 
